@@ -1,5 +1,6 @@
 module Backend exposing (..)
 
+import Base64
 import Dict
 import Env
 import Lamdera exposing (ClientId, SessionId)
@@ -92,9 +93,7 @@ updateFromFrontend sessionId clientId msg model =
             case OAuth.parseCode url of
                 OAuth.Empty ->
                     ( model
-                    , Random.generate
-                        (GotRandomState sessionId clientId url)
-                        (Random.String.string 5 Random.Char.english)
+                    , generateRandomState sessionId clientId url
                     )
 
                 OAuth.Error error ->
@@ -119,3 +118,10 @@ updateFromFrontend sessionId clientId msg model =
                                 ( model
                                 , Lamdera.sendToFrontend clientId AuthSuccess
                                 )
+
+
+generateRandomState : SessionId -> ClientId -> Url -> Cmd BackendMsg
+generateRandomState sessionId clientId url =
+    Random.generate
+        (GotRandomState sessionId clientId url)
+        (Random.String.string 20 Random.Char.english |> Random.map Base64.encode)
